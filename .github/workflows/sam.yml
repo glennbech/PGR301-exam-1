@@ -4,6 +4,9 @@ on: push
 
 jobs:
     build-deploy:
+        defaults:
+          run:
+            working-directory: ./kjell
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
