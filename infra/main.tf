@@ -3,8 +3,8 @@ resource "aws_apprunner_service" "service" {
 
   instance_configuration {
     instance_role_arn = aws_iam_role.role_for_apprunner_service.arn
-    cpu    = "256"
-    memory = "1024"
+    cpu               = "256"
+    memory            = "1024"
   }
 
   source_configuration {
@@ -20,6 +20,10 @@ resource "aws_apprunner_service" "service" {
     }
     auto_deployments_enabled = true
   }
+}
+
+output "service_url" {
+  value = aws_apprunner_service.service.service_url
 }
 
 resource "aws_iam_role" "role_for_apprunner_service" {
