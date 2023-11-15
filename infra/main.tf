@@ -23,7 +23,7 @@ resource "aws_apprunner_service" "service" {
 }
 
 output "service_url" {
-  value = aws_apprunner_service.service.service_url
+  value = "https://${aws_apprunner_service.service.service_url}"
 }
 
 resource "aws_iam_role" "role_for_apprunner_service" {
