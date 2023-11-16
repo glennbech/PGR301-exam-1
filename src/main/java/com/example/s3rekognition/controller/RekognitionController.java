@@ -15,7 +15,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -89,6 +92,34 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
         }
         PPEResponse ppeResponse = new PPEResponse(bucketName, classificationResponses);
         return ResponseEntity.ok(ppeResponse);
+    }
+
+    @PostMapping("/scan-image")
+    public ResponseEntity<PPEClassificationResponse> scanImage(@RequestParam("file") MultipartFile file) throws IOException {
+        logger.info("scanning " + file.getOriginalFilename());
+
+        // This is where the magic happens, use AWS rekognition to detect PPE
+        DetectProtectiveEquipmentRequest request = new DetectProtectiveEquipmentRequest()
+                .withImage(new Image().withBytes(ByteBuffer.wrap(file.getBytes())))
+                .withSummarizationAttributes(new ProtectiveEquipmentSummarizationAttributes()
+                        .withMinConfidence(80f)
+                        .withRequiredEquipmentTypes("FACE_COVER"));
+
+        DetectProtectiveEquipmentResult result = rekognitionClient.detectProtectiveEquipment(request);
+
+        // If any person on an image lacks PPE on the face, it's a violation of regulations
+        boolean violation = isViolation(result);
+
+        logger.info("scanning " + file.getOriginalFilename() + ", violation result " + violation);
+        // Categorize the current image as a violation or not.
+        int personCount = result.getPersons().size();
+        PPEClassificationResponse classification = new PPEClassificationResponse(file.getOriginalFilename(), personCount, violation);
+
+        meterRegistry.counter("scanned-images").increment();
+        meterRegistry.counter("people").increment(personCount);
+        if (violation) meterRegistry.counter("violation").increment();
+
+        return ResponseEntity.ok(classification);
     }
 
     /**
