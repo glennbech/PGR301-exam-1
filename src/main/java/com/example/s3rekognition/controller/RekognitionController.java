@@ -9,11 +9,18 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.example.s3rekognition.PPEClassificationResponse;
 import com.example.s3rekognition.PPEResponse;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.LongTaskTimer;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -26,8 +33,12 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
     private final AmazonRekognition rekognitionClient;
 
     private static final Logger logger = Logger.getLogger(RekognitionController.class.getName());
+    private final MeterRegistry meterRegistry;
 
-    public RekognitionController() {
+    @Autowired
+    public RekognitionController(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+
         this.s3Client = AmazonS3ClientBuilder.standard().build();
         this.rekognitionClient = AmazonRekognitionClientBuilder.standard().build();
     }
@@ -42,7 +53,8 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
      */
     @GetMapping(value = "/scan-ppe", consumes = "*/*", produces = "application/json")
     @ResponseBody
-    public ResponseEntity<PPEResponse> scanForPPE(@RequestParam String bucketName) {
+    @Timed
+    public ResponseEntity<PPEResponse> scanBucketForPPE(@RequestParam String bucketName) {
         // List all objects in the S3 bucket
         ListObjectsV2Result imageList = s3Client.listObjectsV2(bucketName);
 
@@ -54,31 +66,62 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
 
         // Iterate over each object and scan for PPE
         for (S3ObjectSummary image : images) {
-            logger.info("scanning " + image.getKey());
+            PPEClassificationResponse classification = scanImage(image.getKey(),
+                    new Image().withS3Object(new S3Object()
+                               .withBucket(bucketName)
+                               .withName(image.getKey())
+                    )
+            );
 
-            // This is where the magic happens, use AWS rekognition to detect PPE
-            DetectProtectiveEquipmentRequest request = new DetectProtectiveEquipmentRequest()
-                    .withImage(new Image()
-                            .withS3Object(new S3Object()
-                                    .withBucket(bucketName)
-                                    .withName(image.getKey())))
-                    .withSummarizationAttributes(new ProtectiveEquipmentSummarizationAttributes()
-                            .withMinConfidence(80f)
-                            .withRequiredEquipmentTypes("FACE_COVER"));
-
-            DetectProtectiveEquipmentResult result = rekognitionClient.detectProtectiveEquipment(request);
-
-            // If any person on an image lacks PPE on the face, it's a violation of regulations
-            boolean violation = isViolation(result);
-
-            logger.info("scanning " + image.getKey() + ", violation result " + violation);
-            // Categorize the current image as a violation or not.
-            int personCount = result.getPersons().size();
-            PPEClassificationResponse classification = new PPEClassificationResponse(image.getKey(), personCount, violation);
             classificationResponses.add(classification);
         }
         PPEResponse ppeResponse = new PPEResponse(bucketName, classificationResponses);
         return ResponseEntity.ok(ppeResponse);
+    }
+
+    @PostMapping("/scan-image")
+    @Timed
+    public ResponseEntity<PPEClassificationResponse> scanUploadedImageForPPE(@RequestParam("file") MultipartFile file) throws IOException {
+        PPEClassificationResponse classification = scanImage(file.getOriginalFilename(),
+                new Image().withBytes(ByteBuffer.wrap(file.getBytes()))
+        );
+
+        return ResponseEntity.ok(classification);
+    }
+
+
+    private PPEClassificationResponse scanImage(String fileName, Image image) {
+        LongTaskTimer longTaskTimer = LongTaskTimer
+                .builder("scanImage")
+                .register(meterRegistry);
+        LongTaskTimer.Sample sample = longTaskTimer.start();
+
+        logger.info("scanning " + fileName);
+
+        // This is where the magic happens, use AWS rekognition to detect PPE
+        DetectProtectiveEquipmentRequest request = new DetectProtectiveEquipmentRequest()
+                .withImage(image)
+                .withSummarizationAttributes(new ProtectiveEquipmentSummarizationAttributes()
+                        .withMinConfidence(80f)
+                        .withRequiredEquipmentTypes("FACE_COVER")
+                );
+
+        DetectProtectiveEquipmentResult result = rekognitionClient.detectProtectiveEquipment(request);
+
+        // If any person on an image lacks PPE on the face, it's a violation of regulations
+        boolean violation = isViolation(result);
+
+        logger.info("scanning " + fileName + ", violation result " + violation);
+        // Categorize the current image as a violation or not.
+        int personCount = result.getPersons().size();
+        PPEClassificationResponse classification = new PPEClassificationResponse(fileName, personCount, violation);
+
+        sample.stop();
+
+        meterRegistry.counter("scanned-images").increment();
+        meterRegistry.counter("people").increment(personCount);
+        if (violation) meterRegistry.counter("violation").increment();
+        return classification;
     }
 
     /**
