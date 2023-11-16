@@ -9,6 +9,8 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.example.s3rekognition.PPEClassificationResponse;
 import com.example.s3rekognition.PPEResponse;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -51,6 +53,7 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
      */
     @GetMapping(value = "/scan-ppe", consumes = "*/*", produces = "application/json")
     @ResponseBody
+    @Timed
     public ResponseEntity<PPEResponse> scanBucketForPPE(@RequestParam String bucketName) {
         // List all objects in the S3 bucket
         ListObjectsV2Result imageList = s3Client.listObjectsV2(bucketName);
@@ -77,6 +80,7 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
     }
 
     @PostMapping("/scan-image")
+    @Timed
     public ResponseEntity<PPEClassificationResponse> scanUploadedImageForPPE(@RequestParam("file") MultipartFile file) throws IOException {
         PPEClassificationResponse classification = scanImage(file.getOriginalFilename(),
                 new Image().withBytes(ByteBuffer.wrap(file.getBytes()))
@@ -87,6 +91,11 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
 
 
     private PPEClassificationResponse scanImage(String fileName, Image image) {
+        LongTaskTimer longTaskTimer = LongTaskTimer
+                .builder("scanImage")
+                .register(meterRegistry);
+        LongTaskTimer.Sample sample = longTaskTimer.start();
+
         logger.info("scanning " + fileName);
 
         // This is where the magic happens, use AWS rekognition to detect PPE
@@ -106,6 +115,8 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
         // Categorize the current image as a violation or not.
         int personCount = result.getPersons().size();
         PPEClassificationResponse classification = new PPEClassificationResponse(fileName, personCount, violation);
+
+        sample.stop();
 
         meterRegistry.counter("scanned-images").increment();
         meterRegistry.counter("people").increment(personCount);
