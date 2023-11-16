@@ -1,5 +1,5 @@
 variable "threshold" {
-  default = "50"
+  default = "10"
   type = string
 }
 
