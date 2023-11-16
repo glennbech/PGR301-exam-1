@@ -66,8 +66,8 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_policy" "policy" {
-  name        = "${var.prefix}-apr-policy-thingy"
-  description = "Policy for apprunner instance I think"
+  name        = "${var.prefix}-apr-policy"
+  description = "Policy for apprunner instance"
   policy      = data.aws_iam_policy_document.policy.json
 }
 
