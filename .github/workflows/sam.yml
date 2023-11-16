@@ -1,6 +1,9 @@
 name: "Sam"
 
-on: push
+on:
+  push:
+    paths:
+      - kjell/**
 
 jobs:
     build-deploy:
