@@ -53,8 +53,8 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan   -var="prefix=$PREFIX" -var="image=$IMAGE" -var="alarm_emai=$EMAIL"
+        run: terraform plan   -var="prefix=$PREFIX" -var="image=$IMAGE" -var="alarm_email=$EMAIL"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -var="prefix=$PREFIX" -var="image=$IMAGE" -var="alarm_emai=$EMAIL" -auto-approve
+        run: terraform apply -var="prefix=$PREFIX" -var="image=$IMAGE" -var="alarm_email=$EMAIL" -auto-approve
