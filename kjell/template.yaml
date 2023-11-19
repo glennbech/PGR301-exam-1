@@ -36,7 +36,7 @@ Resources:
             Method: get
       Environment: 
         Variables:
-          BUCKET_NAME: kjellsimagebucket
+          BUCKET_NAME: kandidat-2040-bucket
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
