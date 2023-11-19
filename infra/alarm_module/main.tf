@@ -3,11 +3,11 @@ resource "aws_cloudwatch_metric_alarm" "threshold" {
   namespace   = var.prefix
   metric_name = var.metric_name
 
-  comparison_operator = "GreaterThanThreshold"
+  comparison_operator = var.comparison_operator
   threshold           = var.threshold
   evaluation_periods  = "2"
   period              = "60"
-  statistic           = "Maximum"
+  statistic           = var.statistic
 
   alarm_description = "Alarm"
   alarm_actions     = [aws_sns_topic.user_updates.arn]

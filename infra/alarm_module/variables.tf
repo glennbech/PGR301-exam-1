@@ -3,6 +3,16 @@ variable "threshold" {
   type = string
 }
 
+variable "statistic" {
+  default = "Maximum"
+  type = string
+}
+
+variable "comparison_operator" {
+  default = "GreaterThanThreshold"
+  type = string
+}
+
 variable "alarm_email" {
   type = string
 }

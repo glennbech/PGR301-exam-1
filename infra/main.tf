@@ -81,5 +81,7 @@ module "alarm" {
   source = "./alarm_module"
   alarm_email = var.alarm_email
   prefix = var.prefix
-  metric_name = "violation.count"
+  metric_name = "scanImage.duration"
+  statistic = "Average"
+  threshold = "500"
 }
