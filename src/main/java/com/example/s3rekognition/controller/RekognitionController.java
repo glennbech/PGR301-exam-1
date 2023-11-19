@@ -34,10 +34,14 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
 
     private static final Logger logger = Logger.getLogger(RekognitionController.class.getName());
     private final MeterRegistry meterRegistry;
+    private final LongTaskTimer longTaskTimerScanImage;
 
     @Autowired
     public RekognitionController(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+        this.longTaskTimerScanImage = LongTaskTimer
+                .builder("scanImage")
+                .register(this.meterRegistry);
 
         this.s3Client = AmazonS3ClientBuilder.standard().build();
         this.rekognitionClient = AmazonRekognitionClientBuilder.standard().build();
@@ -91,10 +95,7 @@ public class RekognitionController implements ApplicationListener<ApplicationRea
 
 
     private PPEClassificationResponse scanImage(String fileName, Image image) {
-        LongTaskTimer longTaskTimer = LongTaskTimer
-                .builder("scanImage")
-                .register(meterRegistry);
-        LongTaskTimer.Sample sample = longTaskTimer.start();
+        LongTaskTimer.Sample sample = longTaskTimerScanImage.start();
 
         logger.info("scanning " + fileName);
 
