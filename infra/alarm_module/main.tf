@@ -5,8 +5,8 @@ resource "aws_cloudwatch_metric_alarm" "threshold" {
 
   comparison_operator = var.comparison_operator
   threshold           = var.threshold
-  evaluation_periods  = "2"
-  period              = "60"
+  evaluation_periods  = var.evaluation_periods
+  period              = var.period
   statistic           = var.statistic
 
   alarm_description = "Alarm"
