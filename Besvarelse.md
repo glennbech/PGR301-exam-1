@@ -31,9 +31,15 @@ Metrics:
 * Counter people for antall personer som er scannet
 * Counter violation for antall bilder hvor noen ikke bruker nødvendig verneutstyr
 * @Timed på begge endepunktene
-* LongTaskTimer scanImage på hvor lang tid scanning ett bilde tar.
+* LongTaskTimer scanImage på hvor lang tid scanning av ett bilde tar.
 
 ### B
+
+Alarmen utløses hvis scanning av ett enkelt bilde tar i gjennomsnitt lenger enn et halvt sekund, mer enn to minnutter på
+rad. Dette vil gi feedback på om responstiden økes kraftig.
+
+Jeg har valgt at Epost addressen som alarmen bruker hentes fra en github secret. Dette er for å unngå å hardkode eposten
+og for å unngå spam. Ved forking av repoet må det legges til en secret kalt EMAIL.
 
 ## Oppgave 5
 ### A
@@ -41,13 +47,17 @@ Metrics:
 Kontinuerlig Integrasjon er en måte å jobbe med software utvikling som innebærer at endringene man gjør jevnlig
 integreres i main branch.
 
-Ved CI har man gjerne en pipeline som kjører tester og kan sjekke om koden er formatert riktig og om andre kodestandarder
-er fulgt. Man har ofte låst main branchen som gjør at ingen kan commite kode rett til main. Det må opprettes en 
-pull request som ofte må godkjennes av en annen på teamet.
+Ved CI har man gjerne en pipeline som kjører tester og kan sjekke om koden er formatert riktig og om andre
+kodestandarder er fulgt. Man har ofte låst main branchen som gjør at ingen kan commite kode rett til main. Det må
+opprettes en pull request som ofte må godkjennes av en annen på teamet.
+
+Fordelen med Kontinuerlig Integrasjon er at man altid kan vite at main branchen kan bygges og består testene.
 
 ### B
 
+I Scrum jobber man i sprinter og deployer gjerne på slutten av sprinten.
 
+I Devops deployer man oftere.
 
 ### C
 
