@@ -38,7 +38,7 @@ Metrics:
 Alarmen utløses hvis scanning av ett enkelt bilde tar i gjennomsnitt lenger enn et halvt sekund, mer enn to minnutter på
 rad. Dette vil gi feedback på om responstiden økes kraftig.
 
-Jeg har valgt at Epost addressen som alarmen bruker hentes fra en github secret. Dette er for å unngå å hardkode eposten
+Jeg har valgt at Epost adressen som alarmen bruker hentes fra en github secret. Dette er for å unngå å hardkode eposten
 og for å unngå spam. Ved forking av repoet må det legges til en secret kalt EMAIL.
 
 ## Oppgave 5
@@ -51,14 +51,19 @@ Ved CI har man gjerne en pipeline som kjører tester og kan sjekke om koden er f
 kodestandarder er fulgt. Man har ofte låst main branchen som gjør at ingen kan commite kode rett til main. Det må
 opprettes en pull request som ofte må godkjennes av en annen på teamet.
 
-Fordelen med Kontinuerlig Integrasjon er at man altid kan vite at main branchen kan bygges og består testene.
+Fordelen med Kontinuerlig Integrasjon er at man alltid kan vite at main branchen kan bygges og består testene.
 
 ### B
 
 I Scrum jobber man i sprinter og deployer gjerne på slutten av sprinten.
 
-I Devops deployer man oftere.
+I Devops deployer man oftere. Når man deployer oftere er sjansen større for å deploye småfeil hvis man ikke har gode 
+rutiner for testing. Samtidig kan man mye raskere oppdage og rulle ut ny kode når man oppdager feil i produksjon.
 
 ### C
 
+Ved implementering av nye funksjoner kan man implementer innsamling av data om hvordan koden kjører, hvor lang tid 
+forskjellige deler av koden tar osv.
 
+Man kan overvåke bruker adferd og se på hva brukeren trykker på og hvor brukeren stopper opp. Man kan bruke A/B testing
+og ha to forskjellige versjoner av applikasjonen og se hva som fører til at ønsket bruker oppførsel.
