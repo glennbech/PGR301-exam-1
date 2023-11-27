@@ -1,5 +1,5 @@
 ﻿# Eksamen PGR301 2023
-Kandidatnr: 2040
+Kandidatnummer: 2040
 
 ## Oppgave 1
 ### A
@@ -7,13 +7,23 @@ Kandidatnr: 2040
 For at actionen skal kjøre på sensor sin fork må sensor legge inn secretene AWS_ACCESS_KEY_ID og AWS_SECRET_ACCESS_KEY
 under Actions secrets and variables i settings på forken sin. Disse får man generert fra AWS under IAM.
 
+### B
+Done
+
 ## Oppgave 2
+Done
+
 ## Oppgave 3
+### A
+Done
+
 ### B
 
 Hvis sensor har lagt inn de tidligere nevnte AWS tokens i forken sin trenger han ikke gjøre andre endringer for å kjøre
 workflowen. Ønsker sensor å bruke et annet ECR repo og en annen prefix til ressursene som opprettes kan dette enkelt
 endres ved å endre variablene i pipeline.yml
+
+(I oppgave 4B legger jeg til en ny secret for EMAIL)
 
 ## Oppgave 4
 ### A
@@ -35,7 +45,7 @@ Metrics:
 
 ### B
 
-Alarmen utløses hvis scanning av ett enkelt bilde tar i gjennomsnitt lenger enn et halvt sekund, mer enn to minnutter på
+Alarmen utløses hvis scanning av ett enkelt bilde tar i gjennomsnitt lenger enn et halvt sekund, mer enn to minutter på
 rad. Dette vil gi feedback på om responstiden økes kraftig.
 
 Jeg har valgt at Epost adressen som alarmen bruker hentes fra en github secret. Dette er for å unngå å hardkode eposten
